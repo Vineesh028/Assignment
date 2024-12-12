@@ -1,0 +1,51 @@
+openapi: 3.0.1
+info:
+  title: Product Source API
+  description: 'APIs for product source service'
+  version: "1.0"
+
+paths:
+  /v1/product:
+    post:
+      tags:
+        - Product
+      summary: Insert a new product
+      operationId: postProduct
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Product'
+        required: true
+      responses:
+        201:
+          description: Created
+        500:
+          description: Internal server error
+      x-codegen-request-body-name: body
+  /v1/products:
+    post:
+      tags:
+        - Product
+      summary: Insert list of products
+      operationId: postProducts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+               $ref: '#/components/schemas/Product'
+        required: true
+      responses:
+        201:
+          description: Created
+        500:
+          description: Internal server error
+      x-codegen-request-body-name: body
+  
+components:
+  schemas:
+    Product:
+      type: object
+

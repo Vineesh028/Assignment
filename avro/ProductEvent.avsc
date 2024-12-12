@@ -1,0 +1,21 @@
+[
+{
+  "namespace": "com.kafka.schema.model",
+  "type": "record",
+  "name": "Quantity",
+  "fields": [
+    {
+      "name": "eventType",
+      "type": "string"
+    },
+    {
+      "name": "message",
+      "type": "string"
+    },
+    {
+      "name": "product",
+      "type": "Product"
+    }
+  ]
+}
+]

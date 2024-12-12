@@ -1,0 +1,115 @@
+[
+{
+  "namespace": "com.kafka.schema.model",
+  "type": "record",
+  "name": "Product",
+  "fields": [
+    {
+      "name": "productId",
+      "type": "string"
+    },
+    {
+      "name": "productName",
+      "type": "string"
+    },
+    {
+      "name": "description",
+      "type": "string"
+    },
+    {
+      "name": "brand",
+      "type": "Brand",
+    },
+     {
+      "name": "material",
+      "type": "string",
+    },
+     {
+      "name": "size",
+      "type": "Size",
+    },
+     {
+      "name": "colour",
+      "type": "string",
+    },
+     {
+      "name": "ageGroup",
+      "type": "string",
+    },
+     {
+      "name": "category",
+      "type": "string",
+    },
+    
+     {
+      "name": "imageUrl",
+      "type": "string",
+    },
+       {
+      "name": "price",
+      "type": "float",
+    },
+    
+     {
+      "name": "country",
+      "type": "string",
+    },
+    
+     {
+      "name": "quantity",
+      "type": "Quantity",
+    },
+  ]
+},
+
+{
+  "namespace": "com.kafka.schema.model",
+  "type": "record",
+  "name": "Brand",
+  "fields": [
+    {
+      "name": "brandId",
+      "type": "string"
+    },
+    {
+      "name": "brandName",
+      "type": "string"
+    },
+    {
+      "name": "imageUrl",
+      "type": "string"
+    }
+  ]
+},
+
+{
+  "namespace": "com.kafka.schema.model",
+  "type": "record",
+  "name": "Size",
+  "fields": [
+    {
+      "name": "sizeUS",
+      "type": "string"
+    },
+    {
+      "name": "sizeEU",
+      "type": "string"
+    }
+  ]
+},
+{
+  "namespace": "com.kafka.schema.model",
+  "type": "record",
+  "name": "Quantity",
+  "fields": [
+    {
+      "name": "quantityTotal",
+      "type": "integer"
+    },
+    {
+      "name": "quantityAvailable",
+      "type": "integer"
+    }
+  ]
+}
+]

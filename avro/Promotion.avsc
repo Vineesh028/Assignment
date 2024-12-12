@@ -1,0 +1,34 @@
+{
+  "namespace": "com.kafka.schema.model",
+  "type": "record",
+  "name": "Promotion",
+  "fields": [
+    {
+      "name": "promotionId",
+      "type": "string"
+    },
+    {
+      "name": "productList",
+      "type": {
+      "type": "array",  
+      "items":"Product"     
+      }
+    },
+    {
+      "name": "targetGroup",
+      "type": "string"
+    },
+    {
+      "name": "promotionMessage",
+      "type": "string"
+    },
+    {
+      "name": "imageUrls",
+      "type": 
+      {
+      "type": "array",  
+      "items":"string"     
+      }
+    },
+  ]
+}
