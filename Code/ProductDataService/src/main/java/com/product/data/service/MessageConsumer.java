@@ -1,9 +1,16 @@
 package com.product.data.service;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Optional;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.header.Header;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.json.JSONTokener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -13,11 +20,18 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.product.data.entity.ProductEntity;
+import com.product.data.mapper.ProductMapper;
+import com.product.data.repository.ProductRepository;
+import com.product.data.util.Constants;
 
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 
 @Component
 @Slf4j
+@Transactional
 public class MessageConsumer {
 
 	@Value("${app.dlq.topic}")
@@ -26,37 +40,60 @@ public class MessageConsumer {
 	@Autowired
 	private KafkaTemplate<String, String> kafkaTemplate;
 
+	@Autowired
+	ProductRepository productRepository;
+
 	@KafkaListener(id = "ProductListener", topics = "${app.message.topic}")
 	public void consume(ConsumerRecord<String, String> consumerRecord, Acknowledgment acknowledgment)
-			throws IllegalStateException, UnsupportedEncodingException, JsonMappingException, JsonProcessingException {
+			throws IllegalStateException, UnsupportedEncodingException, JsonProcessingException {
 
 		String json = String.valueOf(consumerRecord.value());
-		log.info("Consuming message {}", json);
+		log.info("Consuming message {}", consumerRecord);
 
 		try {
 
-			readAndSaveProductData(json);
-			// countryRepository.save(modelMapper.map(country, CountryEntity.class));
+			readAndSaveProductData(consumerRecord.value());
 
 		} catch (Exception e) {
 			log.info("Message consumption failed for message {}", json);
 			String originalTopic = consumerRecord.topic();
-			ProducerRecord<String, String> record = new ProducerRecord<>(dlqTopic, json);
-			// record.headers().add(Constants.ORIGINAL_TOPIC_HEADER_KEY,
-			// originalTopic.getBytes(StandardCharsets.UTF_8));
-			// Header retryCount =
-			// consumerRecord.headers().lastHeader(Constants.RETRY_COUNT_HEADER_KEY);
-//			if (retryCount != null) {
-//				record.headers().add(retryCount);
-//			}
-			kafkaTemplate.send(record);
+			ProducerRecord<String, String> producerRecord = new ProducerRecord<>(dlqTopic, json);
+			producerRecord.headers().add(Constants.ORIGINAL_TOPIC_HEADER_KEY, originalTopic.getBytes(StandardCharsets.UTF_8));
+			Header retryCount = consumerRecord.headers().lastHeader(Constants.RETRY_COUNT_HEADER_KEY);
+			if (retryCount != null) {
+				producerRecord.headers().add(retryCount);
+			}
+			kafkaTemplate.send(producerRecord);
 		} finally {
 			acknowledgment.acknowledge();
 		}
 	}
 
-	private void readAndSaveProductData(String json) {
-		// TODO Auto-generated method stub
+	private void readAndSaveProductData(String products) {
+
+		Object json = new JSONTokener(products).nextValue();
+
+		if (json instanceof JSONObject) {
+
+			if (ProductMapper.mapToProduct(products).isPresent()) {
+
+				ProductEntity product = ProductMapper.mapToProduct(products).get();
+
+				productRepository.save(product);
+
+			}
+
+		}
+
+		else if (json instanceof JSONArray) {
+
+			List<ProductEntity> productsList = ProductMapper.mapToProductList(products);
+
+			if (!productsList.isEmpty()) {
+				productRepository.saveAll(productsList);
+			}
+
+		}
 
 	}
 }

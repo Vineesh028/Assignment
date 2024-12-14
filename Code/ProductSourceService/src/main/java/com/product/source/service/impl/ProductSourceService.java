@@ -1,6 +1,5 @@
 package com.product.source.service.impl;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,7 +16,6 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import com.mongodb.client.FindIterable;
 import com.product.source.service.IProductSourceService;
 
 @Service
@@ -57,8 +55,8 @@ public class ProductSourceService implements IProductSourceService {
 			mongoTemplate.insert(doc, collectionName);
 			mongoTemplate.insert(doc, outboxCollectionName);
 
-			ProducerRecord<String, String> record = new ProducerRecord<>(messageTopic, products);
-			kafkaTemplate.send(record);
+			ProducerRecord<String, String> producerRecord = new ProducerRecord<>(messageTopic, products);
+			kafkaTemplate.send(producerRecord);
 
 			mongoTemplate.remove(doc, outboxCollectionName);
 		}
@@ -74,11 +72,13 @@ public class ProductSourceService implements IProductSourceService {
 
 			mongoTemplate.insert(docList, collectionName);
 			mongoTemplate.insert(docList, outboxCollectionName);
+			
 
-			ProducerRecord<String, String> record = new ProducerRecord<>(messageTopic, products);
-			kafkaTemplate.send(record);
+			ProducerRecord<String, String> producerRecord = new ProducerRecord<>(messageTopic, products);
+			kafkaTemplate.send(producerRecord);
+			
+			docList.forEach(e -> mongoTemplate.remove(e, outboxCollectionName));
 
-			mongoTemplate.remove(products, outboxCollectionName);
 		}
 
 	}

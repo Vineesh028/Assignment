@@ -13,7 +13,6 @@ import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.product.data.util.Constants;
 
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +29,7 @@ public class DLQConsumer {
 	private KafkaTemplate<String, String> kafkaTemplate;
 
 	@KafkaListener(id = "dlq-topic-consumer", groupId = "dlq-topic-group", topics = "${app.dlq.topic}")
-	public void consume(ConsumerRecord<String, String> consumerRecord, Acknowledgment ack) throws JsonMappingException, JsonProcessingException {
+	public void consume(ConsumerRecord<String, String> consumerRecord, Acknowledgment ack) throws  JsonProcessingException, InterruptedException {
 		String json = String.valueOf(consumerRecord.value());
 
 		try {
@@ -46,11 +45,11 @@ public class DLQConsumer {
 				if (retryCount < retryLimit) {
 					retryCount += 1;
 					log.info("Resending attempt {}", retryCount);
-					ProducerRecord<String, String> record = new ProducerRecord<>(originalTopic, json);
-					byte[] retryCountHeaderInByte = Integer.valueOf(retryCount).toString().getBytes(StandardCharsets.UTF_8);
-					record.headers().add(Constants.RETRY_COUNT_HEADER_KEY, retryCountHeaderInByte);
+					ProducerRecord<String, String> producerRecord = new ProducerRecord<>(originalTopic, json);
+					byte[] retryCountHeaderInByte = Integer.toString(retryCount).getBytes(StandardCharsets.UTF_8);
+					producerRecord.headers().add(Constants.RETRY_COUNT_HEADER_KEY, retryCountHeaderInByte);
 					Thread.sleep(5000);
-					kafkaTemplate.send(record);
+					kafkaTemplate.send(producerRecord);
 				} else {
 					log.error("Retry limit exceeded for message {}", json);
 				}
@@ -59,7 +58,9 @@ public class DLQConsumer {
 			}
 		}
 		catch (InterruptedException e) {
-			log.error("Unable to process DLQ message {}", json);
+			
+			throw new InterruptedException("Unable to process DLQ message ")
+;			
 		} 
 		finally {
 			ack.acknowledge();
